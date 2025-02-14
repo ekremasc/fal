@@ -196,6 +196,9 @@ class ApplicationInfo:
     max_multiplexing: int
     active_runners: int
     min_concurrency: int
+    machine_types: list[str]
+    request_timeout: int
+    startup_timeout: int
 
 
 @dataclass
@@ -208,6 +211,9 @@ class AliasInfo:
     max_multiplexing: int
     active_runners: int
     min_concurrency: int
+    machine_types: list[str]
+    request_timeout: int
+    startup_timeout: int
 
 
 @dataclass
@@ -313,6 +319,9 @@ def _from_grpc_application_info(
         max_multiplexing=message.max_multiplexing,
         active_runners=message.active_runners,
         min_concurrency=message.min_concurrency,
+        machine_types=message.machine_types,
+        request_timeout=message.request_timeout,
+        startup_timeout=message.startup_timeout,
     )
 
 
@@ -336,6 +345,9 @@ def _from_grpc_alias_info(message: isolate_proto.AliasInfo) -> AliasInfo:
         max_multiplexing=message.max_multiplexing,
         active_runners=message.active_runners,
         min_concurrency=message.min_concurrency,
+        machine_types=message.machine_types,
+        request_timeout=message.request_timeout,
+        startup_timeout=message.startup_timeout,
     )
 
 
@@ -402,6 +414,7 @@ class MachineRequirements:
     max_multiplexing: int | None = None
     min_concurrency: int | None = None
     request_timeout: int | None = None
+    startup_timeout: int | None = None
 
     def __post_init__(self):
         if isinstance(self.machine_types, str):
@@ -519,6 +532,7 @@ class FalServerlessConnection:
                 min_concurrency=machine_requirements.min_concurrency,
                 max_multiplexing=machine_requirements.max_multiplexing,
                 request_timeout=machine_requirements.request_timeout,
+                startup_timeout=machine_requirements.startup_timeout,
             )
         else:
             wrapped_requirements = None
@@ -562,6 +576,8 @@ class FalServerlessConnection:
         max_multiplexing: int | None = None,
         max_concurrency: int | None = None,
         min_concurrency: int | None = None,
+        request_timeout: int | None = None,
+        startup_timeout: int | None = None,
     ) -> AliasInfo:
         request = isolate_proto.UpdateApplicationRequest(
             application_name=application_name,
@@ -569,6 +585,8 @@ class FalServerlessConnection:
             max_multiplexing=max_multiplexing,
             max_concurrency=max_concurrency,
             min_concurrency=min_concurrency,
+            request_timeout=request_timeout,
+            startup_timeout=startup_timeout,
         )
         res: isolate_proto.UpdateApplicationResult = self.stub.UpdateApplication(
             request
@@ -614,6 +632,7 @@ class FalServerlessConnection:
                 max_multiplexing=machine_requirements.max_multiplexing,
                 min_concurrency=machine_requirements.min_concurrency,
                 request_timeout=machine_requirements.request_timeout,
+                startup_timeout=machine_requirements.startup_timeout,
             )
         else:
             wrapped_requirements = None

@@ -3,7 +3,6 @@ syntax = "proto3";
 import "common.proto";
 import "server.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 import "google/protobuf/struct.proto";
 
 package controller;
@@ -159,6 +158,7 @@ message MachineRequirements {
     repeated string machine_types = 11; // machine_type alternative
     optional int32 num_gpus = 12;
     optional int32 request_timeout = 13;
+    optional int32 startup_timeout = 14;
 }
 
 enum ApplicationAuthMode {
@@ -209,6 +209,10 @@ message UpdateApplicationRequest {
     optional int32 max_multiplexing = 3;
     optional int32 max_concurrency = 4;
     optional int32 min_concurrency = 5;
+    repeated string valid_regions = 6;
+    repeated string machine_types = 7;
+    optional int32 request_timeout = 8;
+    optional int32 startup_timeout = 9;
 }
 
 message UpdateApplicationResult {
@@ -226,6 +230,9 @@ message ApplicationInfo {
     int32 keep_alive = 4;
     int32 active_runners = 6;
     int32 min_concurrency = 7;
+    repeated string machine_types = 8;
+    optional int32 request_timeout = 9;
+    optional int32 startup_timeout = 10;
 }
 
 message ListApplicationsResult {
@@ -275,6 +282,9 @@ message AliasInfo {
     int32 keep_alive = 6;
     int32 active_runners = 7;
     int32 min_concurrency = 8;
+    repeated string machine_types = 9;
+    optional int32 request_timeout = 10;
+    optional int32 startup_timeout = 11;
 }
 
 message SetSecretRequest {
@@ -313,6 +323,7 @@ message RunnerInfo {
     int32 in_flight_requests = 2;
     optional int32 expiration_countdown = 3;
     float uptime = 4;
+    optional google.protobuf.Struct external_metadata = 5;
 }
 
 message KillRunnerRequest {

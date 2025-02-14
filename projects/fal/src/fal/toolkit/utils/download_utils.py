@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import errno
 import hashlib
 import os
 import shutil
@@ -389,7 +390,11 @@ def clone_repository(
         A Path object representing the full path to the cloned Git repository.
     """
     target_dir = target_dir or FAL_REPOSITORY_DIR  # type: ignore[assignment]
-    repo_name = repo_name or Path(https_url).stem
+
+    if repo_name is None:
+        repo_name = Path(https_url).stem
+        if commit_hash:
+            repo_name += f"-{commit_hash[:8]}"
 
     local_repo_path = Path(target_dir) / repo_name  # type: ignore[arg-type]
 
@@ -411,7 +416,11 @@ def clone_repository(
                     f"Forcing re-download."
                 )
             print(f"Removing the existing repository: {local_repo_path} ")
-            shutil.rmtree(local_repo_path)
+            with TemporaryDirectory(
+                dir=target_dir, suffix=f"{local_repo_path.name}.tmp.old"
+            ) as tmp_dir:
+                os.rename(local_repo_path, tmp_dir)
+                shutil.rmtree(tmp_dir)
 
     # NOTE: using the target_dir to be able to avoid potential copies across temp fs
     # and target fs, and also to be able to atomically rename repo_name dir into place
@@ -440,7 +449,15 @@ def clone_repository(
 
             # NOTE: Atomically renaming the repository directory into place when the
             # clone and checkout are done.
-            os.rename(temp_dir, local_repo_path)
+            try:
+                os.rename(temp_dir, local_repo_path)
+            except OSError as error:
+                shutil.rmtree(temp_dir)
+
+                # someone beat us to it, assume it's good
+                if error.errno != errno.ENOTEMPTY:
+                    raise
+                print(f"{local_repo_path} already exists, skipping rename")
 
         except Exception as error:
             print(f"{error}\nFailed to clone repository '{https_url}' .")
